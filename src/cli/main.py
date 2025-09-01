@@ -1,6 +1,7 @@
 """Main CLI entry point for SentinelZero."""
 
 import sys
+from pathlib import Path
 import click
 import structlog
 from rich.console import Console
@@ -12,6 +13,7 @@ from ..core.scheduler import ProcessScheduler, ScheduleType
 from ..core.restart_policy import RestartPolicyManager
 from ..models.base import init_db, get_session
 from ..models.models import Process as ProcessModel
+from ..config.config_loader import ConfigLoader, create_example_config
 
 # Configure logging
 structlog.configure(
@@ -380,6 +382,161 @@ def logs(name, follow, tail, since, level, grep):
         
     except Exception as e:
         console.print(f"[red]✗[/red] Error: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def config():
+    """Manage configuration."""
+    pass
+
+
+@config.command('show')
+@click.option('--path', '-p', type=click.Path(exists=True), help='Config file path')
+def config_show(path):
+    """Show current configuration."""
+    try:
+        loader = ConfigLoader()
+        if path:
+            config = loader.load(Path(path))
+        else:
+            config = loader.load()
+        
+        if config:
+            import yaml
+            console.print(Panel(yaml.dump(config.dict(exclude_none=True), 
+                                         default_flow_style=False),
+                              title="Current Configuration"))
+        else:
+            console.print("[yellow]No configuration file found. Using defaults.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error loading configuration: {e}")
+        sys.exit(1)
+
+
+@config.command('init')
+@click.option('--path', '-p', type=click.Path(), default='config.yaml', help='Config file path')
+@click.option('--force', '-f', is_flag=True, help='Overwrite existing file')
+def config_init(path, force):
+    """Create example configuration file."""
+    try:
+        config_path = Path(path)
+        
+        if config_path.exists() and not force:
+            console.print(f"[yellow]⚠[/yellow] File {path} already exists. Use --force to overwrite.")
+            sys.exit(1)
+        
+        with open(config_path, 'w') as f:
+            f.write(create_example_config())
+        
+        console.print(f"[green]✓[/green] Created example configuration at {path}")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error creating configuration: {e}")
+        sys.exit(1)
+
+
+@config.command('validate')
+@click.option('--path', '-p', type=click.Path(exists=True), help='Config file path')
+def config_validate(path):
+    """Validate configuration file."""
+    try:
+        loader = ConfigLoader()
+        if path:
+            config = loader.load(Path(path))
+        else:
+            config = loader.load()
+        
+        if loader.validate():
+            console.print("[green]✓[/green] Configuration is valid")
+            
+            # Show summary
+            if config.processes:
+                console.print(f"  - {len(config.processes)} process(es) defined")
+            if config.policies:
+                console.print(f"  - {len(config.policies)} policy(ies) defined")
+        else:
+            console.print("[red]✗[/red] Configuration is invalid")
+            sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]✗[/red] Configuration validation failed: {e}")
+        sys.exit(1)
+
+
+@config.command('load')
+@click.option('--path', '-p', type=click.Path(exists=True), required=True, help='Config file path')
+@click.option('--dry-run', is_flag=True, help='Show what would be loaded without applying')
+def config_load(path, dry_run):
+    """Load and apply configuration from file."""
+    try:
+        loader = ConfigLoader()
+        config = loader.load(Path(path))
+        
+        if not config.processes:
+            console.print("[yellow]No processes defined in configuration.[/yellow]")
+            return
+        
+        if dry_run:
+            console.print("[cyan]Dry run - showing what would be loaded:[/cyan]")
+        
+        with get_session() as session:
+            for proc_config in config.processes:
+                # Apply defaults
+                proc_config = loader.apply_defaults(proc_config)
+                
+                if dry_run:
+                    console.print(f"  - Process: {proc_config.name}")
+                    console.print(f"    Command: {proc_config.command}")
+                    if proc_config.directory:
+                        console.print(f"    Directory: {proc_config.directory}")
+                    if proc_config.restart:
+                        console.print(f"    Restart Policy: max_retries={proc_config.restart.max_retries}")
+                    if proc_config.schedule:
+                        console.print(f"    Schedule: {proc_config.schedule.type}={proc_config.schedule.expression}")
+                else:
+                    # Check if process already exists
+                    existing = session.query(ProcessModel).filter_by(name=proc_config.name).first()
+                    if existing:
+                        console.print(f"[yellow]⚠[/yellow] Process '{proc_config.name}' already exists, skipping")
+                        continue
+                    
+                    # Create process
+                    process = ProcessModel(
+                        name=proc_config.name,
+                        command=proc_config.command,
+                        args=' '.join(proc_config.args) if proc_config.args else None,
+                        working_dir=proc_config.directory,
+                        env_vars=proc_config.environment,
+                        group=proc_config.group,
+                        status='stopped'
+                    )
+                    session.add(process)
+                    session.commit()
+                    
+                    # Apply restart policy if defined
+                    if proc_config.restart:
+                        policy_manager.create_custom_policy(
+                            process_id=process.id,
+                            max_retries=proc_config.restart.max_retries,
+                            retry_delay=proc_config.restart.delay,
+                            backoff_multiplier=proc_config.restart.backoff,
+                            restart_on_codes=proc_config.restart.restart_on_codes
+                        )
+                    
+                    # Add schedule if defined
+                    if proc_config.schedule:
+                        scheduler.add_schedule(
+                            process_id=process.id,
+                            schedule_type=proc_config.schedule.type,
+                            expression=proc_config.schedule.expression,
+                            enabled=proc_config.schedule.enabled
+                        )
+                    
+                    console.print(f"[green]✓[/green] Loaded process '{proc_config.name}'")
+        
+        if not dry_run:
+            console.print(f"[green]✓[/green] Configuration loaded successfully")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error loading configuration: {e}")
         sys.exit(1)
 
 
