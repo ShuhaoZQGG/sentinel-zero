@@ -290,6 +290,17 @@ class ProcessManager:
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 return None
     
+    def get_process_status(self, name: str) -> Optional[ProcessStatus]:
+        """Get the current status of a process."""
+        with self._lock:
+            if name not in self._processes:
+                return None
+            return self._processes[name].status
+    
+    def get_process_logs(self, name: str) -> Optional[Dict[str, str]]:
+        """Get process logs (alias for get_process_output)."""
+        return self.get_process_output(name)
+    
     def stop_group(self, group: str) -> None:
         """Stop all processes in a group."""
         with self._lock:

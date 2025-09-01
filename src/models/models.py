@@ -1,6 +1,6 @@
 """Database models for SentinelZero."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, Boolean, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -21,8 +21,8 @@ class Process(Base):
     exit_code = Column(Integer)
     group_name = Column(String(255), index=True)
     restart_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     started_at = Column(DateTime)
     stopped_at = Column(DateTime)
     
@@ -46,8 +46,8 @@ class Schedule(Base):
     last_run = Column(DateTime)
     next_run = Column(DateTime)
     run_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     process = relationship("Process", back_populates="schedules")
@@ -68,8 +68,8 @@ class RestartPolicyModel(Base):
     ignore_codes = Column(JSON)
     health_check_command = Column(Text)
     health_check_interval = Column(Integer, default=30)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Current restart state
     restart_count = Column(Integer, default=0)
@@ -88,7 +88,7 @@ class ProcessLog(Base):
     process_id = Column(Integer, ForeignKey("processes.id"), nullable=False)
     log_type = Column(String(50), nullable=False)  # stdout, stderr, system
     message = Column(Text)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     # Relationships
     process = relationship("Process", back_populates="logs")
@@ -103,7 +103,7 @@ class Metric(Base):
     cpu_percent = Column(Float)
     memory_mb = Column(Float)
     num_threads = Column(Integer)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     # Relationships
     process = relationship("Process", back_populates="metrics")
