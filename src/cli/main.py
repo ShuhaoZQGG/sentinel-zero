@@ -481,7 +481,14 @@ def daemon(port, host):
     """Run SentinelZero as a daemon service (for launchd)."""
     import asyncio
     import uvicorn
-    from src.api.main import app
+    import sys
+    import os
+    
+    # Add the src directory to Python path
+    src_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, src_path)
+    
+    from api.app import app
     
     console.print(f"[green]Starting SentinelZero daemon on {host}:{port}[/green]")
     

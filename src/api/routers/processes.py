@@ -4,15 +4,19 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from src.api.models.schemas import (
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from api.models.schemas import (
     ProcessCreate,
     ProcessUpdate,
     ProcessResponse,
     ProcessStatus
 )
-from src.models.base import get_session as get_db
-from src.models.models import Process
-from src.core.process_manager import ProcessManager
+from models.base import get_session as get_db
+from models.models import Process
+from core.process_manager import ProcessManager
 
 router = APIRouter()
 

@@ -7,9 +7,12 @@ from contextlib import asynccontextmanager
 import logging
 from typing import Dict, Any
 
-from src.api.routers import processes, schedules, metrics, auth, websocket
-from src.api.middleware.auth import verify_token
-from src.models.base import init_db
+from routers import processes, schedules, metrics, auth, websocket
+from middleware.auth import verify_token
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from models.base import init_db
 
 logger = logging.getLogger(__name__)
 
