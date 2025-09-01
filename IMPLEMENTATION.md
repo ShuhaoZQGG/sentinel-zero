@@ -1,5 +1,43 @@
 # SentinelZero Implementation Summary
 
+## Cycle 6 - Bug Fixes Implementation
+
+### Completed Features ✅
+
+#### Issue #10: CLI Argument Parsing for Long Strings
+**Problem**: The CLI couldn't handle long strings in `-c` and `--args` options, causing "unexpected extra argument" errors.
+
+**Solution**:
+- Added `shlex` module for proper command parsing
+- Modified `start` command to use `shlex.split()` 
+- Commands with quoted strings are now correctly tokenized
+- Both `-c` and `--args` options properly handle long strings with spaces
+- Fixed database handling to avoid unique constraint errors
+
+#### Issue #11: Custom Restart Delay with Time Formats
+**Problem**: Users couldn't specify custom restart delays with human-readable time formats (e.g., "5h").
+
+**Solution**:
+- Created `src/utils/time_parser.py` with `parse_time_to_seconds()` function
+- Supports formats: `5h`, `30m`, `45s`, `2d`, and combined formats like `1h30m`
+- Added `--restart-delay` option to the `start` command
+- Enhanced `restart` command with `--delay` option supporting time formats
+- Added `restart-policy` group commands (create, list, update) with time format support
+- Maintains backward compatibility with numeric values
+
+### Test Coverage
+- ✅ 12 comprehensive tests added
+- All tests passing (100% success rate)
+- 3 tests for CLI argument parsing
+- 9 tests for time format parsing and restart delays
+
+### PR Information
+- PR #18 created: "fix(cycle-6): Fix GitHub Issues #10 and #11"
+- Target branch: cycle-1-start-project-20250831-214755 (main)
+- Source branch: cycle-6-open-github-20250901-122808
+
+---
+
 ## Cycle 1 - Core Features Implementation
 
 ### Completed Features ✅
