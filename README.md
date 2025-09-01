@@ -57,11 +57,22 @@ A macOS service that starts, monitors, schedules, and automatically restarts com
 - Redux state management
 - macOS launchd integration
 
+### Cycle 4 (Bug Fixes)
+- Fixed CLI argument parsing (Issues #10, #11)
+- Added custom restart delay with time formats
+- Enhanced command parsing with shlex
+
+### Cycle 5 (Production Features)
+- Database-backed authentication with User model
+- Prometheus metrics integration at /metrics endpoint
+- Docker containerization with docker-compose
+- Grafana dashboard support
+- Health check endpoints
+
 ## In Progress
 
-- Bug fixes for CLI argument parsing (Issues #10, #11)
-- Database-backed authentication
-- Prometheus metrics integration
+- GitHub Actions CI/CD pipeline
+- Additional integration tests
 
 # MVP Architecture Overview
 Your service will need these core components:
