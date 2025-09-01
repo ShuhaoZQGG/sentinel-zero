@@ -10,8 +10,8 @@ from src.api.models.schemas import (
     ProcessResponse,
     ProcessStatus
 )
-from src.models.database import get_db
-from src.models.process import Process
+from src.models.base import get_session as get_db
+from src.models.models import Process
 from src.core.process_manager import ProcessManager
 
 router = APIRouter()

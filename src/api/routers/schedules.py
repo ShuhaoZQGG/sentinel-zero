@@ -9,10 +9,10 @@ from src.api.models.schemas import (
     ScheduleUpdate,
     ScheduleResponse
 )
-from src.models.database import get_db
-from src.models.schedule import Schedule
-from src.models.process import Process
-from src.core.scheduler import Scheduler
+from src.models.base import get_session as get_db
+from src.models.models import Schedule
+from src.models.models import Process
+from src.core.scheduler import ProcessScheduler as Scheduler
 
 router = APIRouter()
 
