@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import processesReducer from './slices/processesSlice';
 import schedulesReducer from './slices/schedulesSlice';
 import metricsReducer from './slices/metricsSlice';
+import logsReducer from './slices/logsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     processes: processesReducer,
     schedules: schedulesReducer,
     metrics: metricsReducer,
+    logs: logsReducer,
   },
 });
 
