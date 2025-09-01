@@ -91,6 +91,34 @@ class RestartPolicyManager:
             max_retries=0
         )
     
+    def get_policy(self, name: str) -> Optional[RestartPolicy]:
+        """Get a policy by name."""
+        return self._policies.get(name)
+    
+    def list_policies(self) -> List[Dict]:
+        """List all policies."""
+        return [
+            {
+                'name': policy.name,
+                'max_retries': policy.max_retries,
+                'retry_delay': policy.retry_delay,
+                'backoff_multiplier': policy.backoff_multiplier,
+                'max_delay': policy.max_delay
+            }
+            for policy in self._policies.values()
+        ]
+    
+    def remove_policy(self, name: str) -> bool:
+        """Remove a policy."""
+        if name in self._policies:
+            del self._policies[name]
+            # Remove from any processes using this policy
+            for process_name, policy_name in list(self._process_policies.items()):
+                if policy_name == name:
+                    del self._process_policies[process_name]
+            return True
+        return False
+    
     def create_policy(
         self,
         name: str,

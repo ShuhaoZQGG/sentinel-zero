@@ -1,300 +1,159 @@
-# SentinelZero - Cycle 3 Development Plan
+# SentinelZero - Cycle 4 Development Plan
 
 ## Executive Summary
-Building upon the successful completion of all core MVP features in Cycle 2, Cycle 3 focuses on expanding SentinelZero with enterprise-grade capabilities: REST API, web dashboard, and macOS system integration.
+SentinelZero is a production-ready macOS service for process management with enterprise features. Cycle 4 focuses on bug fixes, stability improvements, and production-readiness enhancements.
 
 ## Current State Analysis
-### Completed (Cycle 2)
-- ✅ Process Management (start/stop/monitor)
-- ✅ Scheduling System (cron/interval)
-- ✅ Auto-Restart & Retry Policies
-- ✅ CLI Interface
-- ✅ Database Persistence
-- ✅ 98% test coverage (60 tests passing)
 
-### Technical Foundation
-- **Language**: Python 3.13
-- **Database**: SQLAlchemy with SQLite
-- **CLI**: Click framework
-- **Testing**: pytest with 98% coverage
-- **Architecture**: Modular service-oriented design
+### Completed Features (Cycles 1-3)
+- ✅ Core process management (start/stop/monitor)
+- ✅ Scheduling system (cron/interval)
+- ✅ Auto-restart & retry policies
+- ✅ CLI interface with 98% test coverage
+- ✅ REST API with FastAPI
+- ✅ JWT authentication
+- ✅ WebSocket real-time updates
+- ✅ React dashboard with Material-UI
+- ✅ macOS launchd integration
 
-## Cycle 3 Requirements
+### Outstanding Issues
+1. **Bug #10**: CLI argument parsing issues
+2. **Bug #11**: Additional CLI parsing problems
+3. **Dependency Management**: FastAPI not in requirements.txt
+4. **Authentication**: In-memory store needs database backing
 
-### 1. REST API Development
-**Priority**: HIGH
-**Estimated Effort**: 2 weeks
+## Cycle 4 Requirements
 
-#### Endpoints Design
+### Priority 1: Bug Fixes
+- Fix CLI argument parsing bugs (#10, #11)
+- Ensure proper validation and error messages
+- Add comprehensive unit tests for CLI parsing
+
+### Priority 2: Production Stability
+- Database-backed authentication (PostgreSQL/SQLite)
+- Proper dependency management
+- Integration test suite for API endpoints
+- Error recovery mechanisms
+
+### Priority 3: Monitoring & Observability
+- Prometheus metrics integration
+- Structured logging with log levels
+- Health check endpoints
+- Performance monitoring
+
+### Priority 4: Deployment & Operations
+- Docker containerization
+- CI/CD pipeline (GitHub Actions)
+- Configuration management
+- Backup and recovery procedures
+
+## Technical Architecture
+
+### System Components
 ```
-POST   /api/processes           - Start new process
-GET    /api/processes           - List all processes
-GET    /api/processes/{id}      - Get process details
-DELETE /api/processes/{id}      - Stop process
-PUT    /api/processes/{id}      - Update process config
-
-POST   /api/schedules           - Create schedule
-GET    /api/schedules           - List schedules
-DELETE /api/schedules/{id}      - Remove schedule
-PUT    /api/schedules/{id}      - Update schedule
-
-GET    /api/processes/{id}/logs - Get process logs
-GET    /api/processes/{id}/metrics - Get resource metrics
-GET    /api/health              - Service health check
-```
-
-#### Technical Stack
-- **Framework**: FastAPI (async, OpenAPI, modern)
-- **Authentication**: JWT tokens with refresh
-- **Validation**: Pydantic models
-- **CORS**: Configurable for web clients
-- **Rate Limiting**: Redis-based or in-memory
-
-### 2. Web Dashboard
-**Priority**: HIGH
-**Estimated Effort**: 2 weeks
-
-#### Core Features
-- Real-time process status monitoring
-- Interactive process control (start/stop/restart)
-- Log streaming with filtering
-- Resource usage charts (CPU/memory)
-- Schedule management UI
-- Configuration editor
-
-#### Technical Stack
-- **Frontend**: React + TypeScript
-- **State Management**: Redux Toolkit or Zustand
-- **UI Components**: Material-UI or Ant Design
-- **Charts**: Recharts or Chart.js
-- **WebSocket**: Socket.io for real-time updates
-- **Build Tool**: Vite
-
-### 3. macOS System Integration
-**Priority**: MEDIUM
-**Estimated Effort**: 1 week
-
-#### launchd Integration
-```xml
-<!-- com.sentinelzero.plist -->
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.sentinelzero</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/sentinelzero</string>
-        <string>daemon</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-</dict>
-</plist>
+┌─────────────────────────────────────────────┐
+│                Web Dashboard                 │
+│         (React + TypeScript + Redux)         │
+└─────────────────┬───────────────────────────┘
+                  │ WebSocket/REST
+┌─────────────────▼───────────────────────────┐
+│              REST API Layer                  │
+│         (FastAPI + JWT + WebSocket)         │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│           Core Business Logic                │
+│   (Process Manager + Scheduler + Monitor)    │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│            Data Persistence                  │
+│        (SQLite/PostgreSQL + Redis)          │
+└──────────────────────────────────────────────┘
 ```
 
-#### Installation Package
-- Homebrew formula creation
-- Installation script with permissions setup
-- Uninstaller script
-- Auto-update mechanism
-
-### 4. Advanced Monitoring
-**Priority**: MEDIUM
-**Estimated Effort**: 1 week
-
-#### Features
-- Prometheus metrics export
-- Custom health check scripts
-- Webhook notifications (Slack, Discord, email)
-- Alert thresholds configuration
-- Historical metrics storage
-
-### 5. Configuration Management
-**Priority**: LOW
-**Estimated Effort**: 3 days
-
-#### Enhancements
-- YAML/JSON config file support
-- Hot-reload capability
-- Config validation schema
-- Environment-specific configs
-- Secrets management
-
-## Architecture Updates
-
-### API Layer Architecture
-```
-sentinelzero/
-├── api/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI app
-│   ├── routers/
-│   │   ├── processes.py
-│   │   ├── schedules.py
-│   │   ├── metrics.py
-│   │   └── auth.py
-│   ├── models/
-│   │   └── schemas.py       # Pydantic models
-│   ├── middleware/
-│   │   ├── auth.py
-│   │   └── cors.py
-│   └── websocket/
-│       └── connections.py
-```
-
-### Frontend Architecture
-```
-sentinel-web/
-├── src/
-│   ├── components/
-│   │   ├── ProcessList/
-│   │   ├── LogViewer/
-│   │   ├── MetricsChart/
-│   │   └── ScheduleManager/
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── websocket.ts
-│   ├── store/
-│   │   └── slices/
-│   └── App.tsx
-```
-
-## Database Schema Updates
-
-### New Tables
-```sql
--- API Authentication
-CREATE TABLE api_tokens (
-    id INTEGER PRIMARY KEY,
-    token_hash VARCHAR(255) UNIQUE,
-    user_id INTEGER,
-    created_at TIMESTAMP,
-    expires_at TIMESTAMP,
-    is_active BOOLEAN
-);
-
--- Webhook Configurations
-CREATE TABLE webhooks (
-    id INTEGER PRIMARY KEY,
-    url VARCHAR(500),
-    event_type VARCHAR(50),
-    is_active BOOLEAN,
-    created_at TIMESTAMP
-);
-
--- Metrics History
-CREATE TABLE metrics_history (
-    id INTEGER PRIMARY KEY,
-    process_id INTEGER,
-    cpu_percent FLOAT,
-    memory_mb FLOAT,
-    timestamp TIMESTAMP,
-    FOREIGN KEY (process_id) REFERENCES processes(id)
-);
-```
+### Technology Stack
+- **Backend**: Python 3.9+, FastAPI, SQLAlchemy, APScheduler
+- **Frontend**: React 18, TypeScript, Redux Toolkit, Material-UI
+- **Database**: SQLite (default), PostgreSQL (production)
+- **Cache**: Redis (optional, for sessions)
+- **Monitoring**: Prometheus + Grafana
+- **Deployment**: Docker, GitHub Actions
 
 ## Implementation Phases
 
-### Phase 1: API Foundation (Week 1)
-1. Set up FastAPI project structure
-2. Implement core endpoints
-3. Add authentication/authorization
-4. Create OpenAPI documentation
-5. Write API integration tests
+### Phase 1: Bug Fixes & Stability (Week 1)
+- [ ] Fix CLI argument parsing bugs
+- [ ] Update requirements.txt with all dependencies
+- [ ] Add integration tests for CLI commands
+- [ ] Improve error handling and messages
 
-### Phase 2: Web Dashboard (Week 2-3)
-1. Initialize React project
-2. Build component library
-3. Implement state management
-4. Add WebSocket connections
-5. Create responsive layouts
+### Phase 2: Database Integration (Week 1-2)
+- [ ] Implement SQLAlchemy models for auth
+- [ ] Migrate from in-memory to database storage
+- [ ] Add database migration system (Alembic)
+- [ ] Implement session management
 
-### Phase 3: System Integration (Week 4)
-1. Create launchd configuration
-2. Build installation scripts
-3. Implement Homebrew formula
-4. Test system startup/shutdown
+### Phase 3: Monitoring & Metrics (Week 2)
+- [ ] Integrate Prometheus client
+- [ ] Export process metrics
+- [ ] Add custom business metrics
+- [ ] Create Grafana dashboards
 
-### Phase 4: Advanced Features (Week 5)
-1. Add Prometheus metrics
-2. Implement webhooks
-3. Create custom health checks
-4. Build alert system
+### Phase 4: Deployment Pipeline (Week 3)
+- [ ] Create Dockerfile and docker-compose
+- [ ] Set up GitHub Actions workflow
+- [ ] Add automated testing in CI
+- [ ] Configure release process
+
+### Phase 5: Documentation & Polish (Week 3)
+- [ ] Update API documentation
+- [ ] Create deployment guide
+- [ ] Add troubleshooting guide
+- [ ] Performance tuning
 
 ## Risk Assessment
 
 ### Technical Risks
-1. **WebSocket Scalability**: Multiple dashboard connections
-   - Mitigation: Connection pooling, rate limiting
-   
-2. **API Security**: Authentication vulnerabilities
-   - Mitigation: JWT best practices, rate limiting, HTTPS only
+1. **Database Migration**: Data loss during migration
+   - Mitigation: Comprehensive backup strategy
+2. **Performance Impact**: Metrics collection overhead
+   - Mitigation: Configurable sampling rates
+3. **Compatibility**: macOS version differences
+   - Mitigation: Test on multiple versions
 
-3. **macOS Permissions**: System-level access restrictions
-   - Mitigation: Proper entitlements, user guidance
+### Operational Risks
+1. **Deployment Complexity**: Docker/K8s learning curve
+   - Mitigation: Detailed documentation
+2. **Monitoring Overhead**: Resource consumption
+   - Mitigation: Lightweight metrics collection
 
-### Dependencies
-- FastAPI ecosystem maturity ✅
-- React ecosystem stability ✅
-- macOS API stability ✅
+## Success Criteria
+- Zero critical bugs in production
+- 99.9% uptime for core services
+- Response time <100ms for API calls
+- Complete documentation coverage
+- Automated deployment pipeline
+- Real-time monitoring dashboard
 
-## Testing Strategy
+## Deliverables
+1. Bug-free CLI with comprehensive tests
+2. Database-backed authentication system
+3. Prometheus metrics integration
+4. Docker deployment configuration
+5. CI/CD pipeline with GitHub Actions
+6. Updated documentation suite
 
-### Unit Tests
-- API endpoint tests (pytest)
-- Frontend component tests (Jest)
-- WebSocket connection tests
-
-### Integration Tests
-- API + Database interactions
-- Frontend + API communication
-- launchd service lifecycle
-
-### Performance Tests
-- API load testing (locust)
-- Dashboard rendering performance
-- WebSocket message throughput
-
-## Success Metrics
-
-### Quantitative
-- API response time < 100ms (p95)
-- Dashboard load time < 2s
-- WebSocket latency < 50ms
-- Zero-downtime deployments
-
-### Qualitative
-- Intuitive dashboard UX
-- Comprehensive API documentation
-- Smooth installation experience
-- Reliable system integration
-
-## Technology Decisions
-
-### API Framework: FastAPI
-- **Rationale**: Modern, async, automatic OpenAPI docs, Pydantic integration
-
-### Frontend: React + TypeScript
-- **Rationale**: Industry standard, strong ecosystem, type safety
-
-### Real-time: WebSockets
-- **Rationale**: Native browser support, bidirectional communication
-
-### Deployment: Docker + docker-compose
-- **Rationale**: Consistent environments, easy distribution
+## Timeline
+- **Week 1**: Bug fixes and database integration
+- **Week 2**: Monitoring and metrics
+- **Week 3**: Deployment and documentation
+- **Testing & QA**: Continuous throughout
 
 ## Next Cycle Recommendations
-
-### Cycle 4 Focus Areas
-1. Distributed architecture (multiple hosts)
-2. Container/Kubernetes support
-3. Advanced analytics and ML predictions
-4. Enterprise features (LDAP, SSO)
-5. Mobile app development
-
-## Conclusion
-Cycle 3 transforms SentinelZero from a robust CLI tool into a comprehensive process management platform with modern API, real-time dashboard, and native macOS integration. The plan maintains backward compatibility while adding enterprise-grade capabilities.
+1. Kubernetes deployment manifests
+2. Multi-tenant support
+3. API rate limiting
+4. Advanced scheduling features
+5. Mobile application
+6. Cloud provider integrations

@@ -46,6 +46,32 @@ scheduler.set_process_manager(process_manager)
 init_db()
 
 
+def parse_delay(delay_str):
+    """Parse delay string into seconds.
+    
+    Supports formats like:
+    - 5h (5 hours)
+    - 30m (30 minutes)
+    - 120s (120 seconds)
+    - 60 (60 seconds, default)
+    """
+    if not delay_str:
+        return 0
+    
+    delay_str = delay_str.strip()
+    
+    # Check for unit suffix
+    if delay_str.endswith('h'):
+        return int(delay_str[:-1]) * 3600
+    elif delay_str.endswith('m'):
+        return int(delay_str[:-1]) * 60
+    elif delay_str.endswith('s'):
+        return int(delay_str[:-1])
+    else:
+        # Assume seconds if no unit
+        return int(delay_str)
+
+
 def get_db_session():
     """Get a database session."""
     return get_session()
@@ -63,15 +89,15 @@ def cli(log_level, no_color):
 
 @cli.command()
 @click.option('--name', '-n', required=True, help='Process name')
-@click.option('--cmd', '-c', required=True, help='Command to execute')
-@click.option('--args', multiple=True, help='Command arguments')
+@click.option('--cmd', '-c', required=True, help='Command to execute (can include arguments in quotes)')
 @click.option('--dir', '-d', 'working_dir', help='Working directory')
 @click.option('--env', '-e', multiple=True, help='Environment variables (KEY=VALUE)')
 @click.option('--group', '-g', help='Process group name')
 @click.option('--restart-policy', default='standard', help='Restart policy name')
+@click.option('--restart-delay', help='Custom restart delay (e.g., 5h, 30m, 120s)')
 @click.option('--schedule', help='Schedule expression (cron or interval)')
 @click.option('--detach', is_flag=True, help='Run in background')
-def start(name, cmd, args, working_dir, env, group, restart_policy, schedule, detach):
+def start(name, cmd, working_dir, env, group, restart_policy, restart_delay, schedule, detach):
     """Start a new process."""
     try:
         # Parse environment variables
@@ -81,25 +107,46 @@ def start(name, cmd, args, working_dir, env, group, restart_policy, schedule, de
                 key, value = e.split('=', 1)
                 env_vars[key] = value
         
-        # Parse command if args not provided
+        # Parse command and arguments
         import shlex
-        if not args and ' ' in cmd:
+        parsed_args = []
+        
+        # If cmd contains spaces, parse it to extract command and arguments
+        if ' ' in cmd:
             parts = shlex.split(cmd)
             cmd = parts[0]
-            args = parts[1:]
+            parsed_args = parts[1:]
         
         # Start the process
         info = process_manager.start_process(
             name=name,
             command=cmd,
-            args=list(args) if args else [],
+            args=parsed_args,
             working_dir=working_dir,
             env_vars=env_vars,
             group=group
         )
         
-        # Apply restart policy
-        policy_manager.apply_policy(name, restart_policy)
+        # Apply restart policy with custom delay if provided
+        if restart_delay:
+            # Parse delay format (e.g., 5h, 30m, 120s, or just a number for seconds)
+            delay_seconds = parse_delay(restart_delay)
+            # Create a custom policy based on the selected one with custom delay
+            custom_policy_name = f"{restart_policy}_custom_{name}"
+            base_policy = policy_manager.get_policy(restart_policy)
+            if base_policy:
+                policy_manager.create_policy(
+                    name=custom_policy_name,
+                    max_retries=base_policy.max_retries,
+                    retry_delay=delay_seconds,
+                    backoff_multiplier=base_policy.backoff_multiplier,
+                    max_delay=base_policy.max_delay
+                )
+                policy_manager.apply_policy(name, custom_policy_name)
+            else:
+                policy_manager.apply_policy(name, restart_policy)
+        else:
+            policy_manager.apply_policy(name, restart_policy)
         
         # Add schedule if provided
         if schedule:
@@ -121,7 +168,7 @@ def start(name, cmd, args, working_dir, env, group, restart_policy, schedule, de
                 schedule_type=schedule_type,
                 expression=expression,
                 command=cmd,
-                args=list(args) if args else [],
+                args=parsed_args,
                 working_dir=working_dir,
                 env_vars=env_vars
             )
@@ -131,7 +178,7 @@ def start(name, cmd, args, working_dir, env, group, restart_policy, schedule, de
             process_model = ProcessModel(
                 name=name,
                 command=cmd,
-                args=list(args) if args else [],
+                args=parsed_args,
                 working_dir=working_dir,
                 env_vars=env_vars,
                 status=info.status.value,
@@ -471,6 +518,117 @@ def config_validate(path):
             sys.exit(1)
     except Exception as e:
         console.print(f"[red]✗[/red] Configuration validation failed: {e}")
+        sys.exit(1)
+
+
+@cli.group()
+def policy():
+    """Manage restart policies."""
+    pass
+
+
+@policy.command('create')
+@click.option('--name', '-n', required=True, help='Policy name')
+@click.option('--retries', type=int, default=3, help='Maximum retry count')
+@click.option('--delay', default='5s', help='Retry delay (e.g., 5h, 30m, 120s)')
+@click.option('--backoff', type=float, default=1.5, help='Backoff multiplier')
+@click.option('--max-delay', help='Maximum delay between retries')
+def policy_create(name, retries, delay, backoff, max_delay):
+    """Create a new restart policy."""
+    try:
+        delay_seconds = parse_delay(delay)
+        max_delay_seconds = parse_delay(max_delay) if max_delay else delay_seconds * 10
+        
+        policy_manager.create_policy(
+            name=name,
+            max_retries=retries,
+            retry_delay=delay_seconds,
+            backoff_multiplier=backoff,
+            max_delay=max_delay_seconds
+        )
+        
+        console.print(f"[green]✓[/green] Created restart policy '{name}'")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error creating policy: {e}")
+        sys.exit(1)
+
+
+@policy.command('list')
+def policy_list():
+    """List all restart policies."""
+    try:
+        policies = policy_manager.list_policies()
+        
+        if not policies:
+            console.print("[yellow]No policies defined[/yellow]")
+            return
+        
+        table = Table(title="Restart Policies")
+        table.add_column("Name", style="cyan")
+        table.add_column("Max Retries", style="magenta")
+        table.add_column("Retry Delay", style="yellow")
+        table.add_column("Backoff", style="green")
+        table.add_column("Max Delay", style="blue")
+        
+        for policy_data in policies:
+            # Format delay in human-readable format
+            delay = policy_data['retry_delay']
+            if delay >= 3600:
+                delay_str = f"{delay // 3600}h"
+            elif delay >= 60:
+                delay_str = f"{delay // 60}m"
+            else:
+                delay_str = f"{delay}s"
+            
+            max_delay = policy_data.get('max_delay', 0)
+            if max_delay >= 3600:
+                max_delay_str = f"{max_delay // 3600}h"
+            elif max_delay >= 60:
+                max_delay_str = f"{max_delay // 60}m"
+            else:
+                max_delay_str = f"{max_delay}s"
+            
+            table.add_row(
+                policy_data['name'],
+                str(policy_data['max_retries']),
+                delay_str,
+                str(policy_data.get('backoff_multiplier', 1.0)),
+                max_delay_str
+            )
+        
+        console.print(table)
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error listing policies: {e}")
+        sys.exit(1)
+
+
+@policy.command('apply')
+@click.option('--process', '-p', required=True, help='Process name')
+@click.option('--policy-name', '-n', required=True, help='Policy name to apply')
+def policy_apply(process, policy_name):
+    """Apply a restart policy to a process."""
+    try:
+        policy_manager.apply_policy(process, policy_name)
+        console.print(f"[green]✓[/green] Applied policy '{policy_name}' to process '{process}'")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error applying policy: {e}")
+        sys.exit(1)
+
+
+@policy.command('remove')
+@click.option('--name', '-n', required=True, help='Policy name to remove')
+def policy_remove(name):
+    """Remove a restart policy."""
+    try:
+        # Check if it's a default policy
+        if name in ['standard', 'aggressive', 'conservative', 'none']:
+            console.print(f"[red]✗[/red] Cannot remove default policy '{name}'")
+            sys.exit(1)
+        
+        policy_manager.remove_policy(name)
+        console.print(f"[green]✓[/green] Removed policy '{name}'")
+    except Exception as e:
+        console.print(f"[red]✗[/red] Error removing policy: {e}")
         sys.exit(1)
 
 

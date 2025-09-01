@@ -41,13 +41,27 @@ A macOS service that starts, monitors, schedules, and automatically restarts com
 
 ## Completed Features
 
-- None (Project initialization phase)
+### Cycle 1-2 (Core MVP)
+- Process Management (start/stop/monitor)
+- Scheduling System (cron/interval)
+- Auto-Restart & Retry Policies
+- CLI Interface
+- Database Persistence (SQLite)
+- 98% test coverage
+
+### Cycle 3 (Enterprise Features)
+- REST API with FastAPI
+- JWT Authentication
+- WebSocket real-time updates
+- React Dashboard with Material-UI
+- Redux state management
+- macOS launchd integration
 
 ## In Progress
 
-- Project architecture planning
-- Technology stack selection
-- Database schema design
+- Bug fixes for CLI argument parsing (Issues #10, #11)
+- Database-backed authentication
+- Prometheus metrics integration
 
 # MVP Architecture Overview
 Your service will need these core components:
