@@ -474,6 +474,24 @@ def config_validate(path):
         sys.exit(1)
 
 
+@cli.command()
+@click.option('--port', '-p', type=int, default=8000, help='API port')
+@click.option('--host', '-h', default='0.0.0.0', help='API host')
+def daemon(port, host):
+    """Run SentinelZero as a daemon service (for launchd)."""
+    import asyncio
+    import uvicorn
+    from src.api.main import app
+    
+    console.print(f"[green]Starting SentinelZero daemon on {host}:{port}[/green]")
+    
+    # Start the scheduler
+    scheduler.start()
+    
+    # Run the API server
+    uvicorn.run(app, host=host, port=port, log_level="info")
+
+
 @config.command('load')
 @click.option('--path', '-p', type=click.Path(exists=True), required=True, help='Config file path')
 @click.option('--dry-run', is_flag=True, help='Show what would be loaded without applying')
