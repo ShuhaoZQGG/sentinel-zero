@@ -7,11 +7,11 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from core.process_manager import ProcessManager
-from core.restart_policy import RestartPolicyManager
-from core.scheduler import ProcessScheduler, ScheduleType
-from models.base import get_session, init_db
-from models.models import Process as ProcessModel
+from src.core.process_manager import ProcessManager
+from src.core.restart_policy import RestartPolicyManager
+from src.core.scheduler import ProcessScheduler, ScheduleType
+from src.models.base import get_session, init_db
+from src.models.models import Process as ProcessModel
 
 
 # Pydantic models for API

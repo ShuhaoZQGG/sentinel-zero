@@ -11,7 +11,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models import Process, Schedule, get_session
+from src.models import Process, Schedule, get_session
 
 # Create a custom registry
 registry = CollectorRegistry()

@@ -8,15 +8,15 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from api.models.schemas import (
+from src.api.models.schemas import (
     ScheduleCreate,
     ScheduleUpdate,
     ScheduleResponse
 )
-from models.base import get_session as get_db
-from models.models import Schedule
-from models.models import Process
-from core.scheduler import ProcessScheduler as Scheduler
+from src.models.base import get_session as get_db
+from src.models.models import Schedule
+from src.models.models import Process
+from src.core.scheduler import ProcessScheduler as Scheduler
 
 router = APIRouter()
 

@@ -8,14 +8,14 @@ import logging
 from typing import Dict, Any
 import time
 
-from routers import processes, schedules, metrics, websocket
-from routers.auth_db import router as auth_router
-from prometheus_metrics import metrics_endpoint, api_requests, api_request_duration
-from middleware.auth_db import verify_token, initialize_admin_user
+from src.api.routers import processes, schedules, metrics, websocket
+from src.api.routers.auth_db import router as auth_router
+from src.api.prometheus_metrics import metrics_endpoint, api_requests, api_request_duration
+from src.api.middleware.auth_db import verify_token, initialize_admin_user
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.base import init_db
+from src.models.base import init_db
 
 logger = logging.getLogger(__name__)
 

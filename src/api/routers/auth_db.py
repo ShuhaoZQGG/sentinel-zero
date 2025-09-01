@@ -6,8 +6,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from api.models.schemas import TokenRequest, TokenResponse, UserCreate
-from api.middleware.auth_db import (
+from src.api.models.schemas import TokenRequest, TokenResponse, UserCreate
+from src.api.middleware.auth_db import (
     authenticate_user,
     create_access_token,
     create_refresh_token,
@@ -16,7 +16,7 @@ from api.middleware.auth_db import (
     create_user,
     get_user_by_username
 )
-from models import get_session
+from src.models import get_session
 
 router = APIRouter()
 
@@ -68,7 +68,7 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_session)):
     )
 
 
-@router.post("/register", response_model=dict)
+@router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def register(user: UserCreate, db: Session = Depends(get_session)):
     """Register a new user"""
     try:
