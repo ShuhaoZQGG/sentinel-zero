@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.api.main import app
 from src.models import Base, User
-from src.database import get_db
+from src.models.base import get_session as get_db
 import os
 import tempfile
 

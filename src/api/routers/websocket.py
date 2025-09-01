@@ -11,8 +11,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from api.models.schemas import WebSocketMessage
-from models.base import get_session as get_db
+from src.api.models.schemas import WebSocketMessage
+from src.models.base import get_session as get_db
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
