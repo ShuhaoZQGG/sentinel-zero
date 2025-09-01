@@ -1,0 +1,9 @@
+#!/bin/bash
+# SentinelZero command wrapper
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Activate the virtual environment and run sentinel-zero
+source "$SCRIPT_DIR/.venv/bin/activate" 2>/dev/null
+exec sentinel-zero "$@"
