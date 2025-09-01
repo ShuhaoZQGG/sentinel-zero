@@ -1,243 +1,251 @@
-# SentinelZero - Project Plan
+# SentinelZero - Cycle 2 Project Plan
 
-## Project Overview
+## Executive Summary
+SentinelZero is a macOS service for process lifecycle management with automatic restart capabilities, scheduling, and comprehensive monitoring. Cycle 1 established core functionality with 100% test coverage. Cycle 2 focuses on configuration management, REST API, and integration testing.
 
-SentinelZero is a robust macOS service for managing command-line processes with advanced monitoring, scheduling, and auto-restart capabilities.
+## Current Status
+- ✅ Core process management implemented
+- ✅ Scheduling system operational 
+- ✅ CLI interface functional
+- ✅ GitHub issues #10 and #11 resolved
+- 🔄 Configuration management needed
+- 🔄 REST API pending
+- 🔄 Integration tests required
 
 ## Requirements Analysis
 
 ### Functional Requirements
+1. **Process Management** ✅
+   - Start/stop/restart processes
+   - Resource monitoring (CPU/memory)
+   - Output capture and logging
+   - Process groups
 
-#### Core Process Management
-- Start/stop processes with custom commands and arguments
-- Real-time process monitoring with PID tracking
-- Stdout/stderr capture and logging
-- Environment variable injection
-- Working directory configuration
-- Process group management for related processes
+2. **Scheduling** ✅
+   - Cron expressions
+   - Interval-based schedules
+   - One-time execution
 
-#### Scheduling Engine
-- Cron expression support for complex schedules
-- One-time task execution
-- Interval-based scheduling
-- Schedule persistence and recovery
-- Schedule conflict resolution
+3. **Restart Policies** ✅
+   - Configurable retry limits
+   - Exponential backoff
+   - Exit code conditions
 
-#### Auto-Restart System
-- Configurable retry policies (count, delay, backoff)
-- Exit code-based conditional restarts
-- Health check integration
-- Resource threshold monitoring
-- Crash detection and recovery
+4. **Configuration** 🔄
+   - YAML file support
+   - Process templates
+   - Environment management
 
-#### User Interface
-- CLI with intuitive commands
-- Real-time status reporting
-- Log streaming and filtering
-- Configuration management
-- Optional REST API
+5. **API Access** 🔄
+   - REST API endpoints
+   - WebSocket for real-time logs
+   - Authentication
 
 ### Non-Functional Requirements
-- High reliability (99.9% uptime)
-- Low resource footprint (<50MB RAM idle)
-- Fast process startup (<100ms)
-- Secure command execution
-- macOS 11+ compatibility
+- Performance: <100ms CLI response, <50MB memory
+- Reliability: Graceful shutdown, state persistence
+- Security: Input validation, permission management
+- Usability: Intuitive CLI, clear error messages
 
-## System Architecture
+## Architecture
 
-### Component Design
-
+### System Components
 ```
-┌──────────────────────────────────────────┐
-│              CLI Interface                │
-├──────────────────────────────────────────┤
-│              Core Service                 │
-├────────┬──────────┬──────────┬──────────┤
-│Process │Scheduler │Monitor   │Restart   │
-│Manager │Engine    │Service   │Policy    │
-├────────┴──────────┴──────────┴──────────┤
-│           Data Layer (SQLite)            │
-└──────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│              CLI Interface                  │
+├─────────────────────────────────────────────┤
+│              REST API (FastAPI)             │
+├─────────────────────────────────────────────┤
+│           Business Logic Layer              │
+│  ┌──────────┬──────────┬──────────┐       │
+│  │Process   │Scheduler │Restart   │       │
+│  │Manager   │          │Policy    │       │
+│  └──────────┴──────────┴──────────┘       │
+├─────────────────────────────────────────────┤
+│         Data Access Layer (SQLAlchemy)      │
+├─────────────────────────────────────────────┤
+│            SQLite Database                  │
+└─────────────────────────────────────────────┘
 ```
 
 ### Technology Stack
+- **Language**: Python 3.11+
+- **Process Management**: psutil
+- **Scheduling**: APScheduler
+- **CLI**: Click + Rich
+- **API**: FastAPI
+- **Database**: SQLAlchemy + SQLite
+- **Testing**: pytest
+- **Logging**: structlog
 
-#### Language: Python 3.11+
-- Mature ecosystem for system programming
-- Excellent process management libraries
-- Rapid development and prototyping
-
-#### Core Libraries
-- `psutil`: Process monitoring and resource tracking
-- `APScheduler`: Advanced scheduling with persistence
-- `subprocess`: Process execution and control
-- `SQLAlchemy`: ORM for database operations
-- `click`: CLI framework
-- `pydantic`: Data validation and settings
-- `structlog`: Structured logging
-
-#### Database: SQLite
-- Lightweight embedded database
-- Zero configuration
-- ACID compliance
-- File-based persistence
-
-#### Optional Components
-- `FastAPI`: REST API (future enhancement)
-- `watchdog`: File system monitoring
-- `prometheus-client`: Metrics export
-
-## Database Schema
-
+### Database Schema
 ```sql
--- Processes table
+-- Processes
 CREATE TABLE processes (
     id INTEGER PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
     command TEXT NOT NULL,
-    args TEXT,
     working_dir TEXT,
-    env_vars TEXT,
-    status TEXT DEFAULT 'stopped',
+    status TEXT,
     pid INTEGER,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    restart_policy_id INTEGER
 );
 
--- Schedules table
+-- Schedules
 CREATE TABLE schedules (
     id INTEGER PRIMARY KEY,
-    process_id INTEGER REFERENCES processes(id),
-    schedule_type TEXT NOT NULL,
-    schedule_expr TEXT NOT NULL,
-    enabled BOOLEAN DEFAULT true,
-    last_run TIMESTAMP,
-    next_run TIMESTAMP,
-    created_at TIMESTAMP
+    process_id INTEGER,
+    expression TEXT,
+    type TEXT,
+    enabled BOOLEAN,
+    next_run TIMESTAMP
 );
 
--- Restart policies table
+-- Restart Policies
 CREATE TABLE restart_policies (
     id INTEGER PRIMARY KEY,
-    process_id INTEGER REFERENCES processes(id),
-    max_retries INTEGER DEFAULT 3,
-    retry_delay INTEGER DEFAULT 5,
-    backoff_multiplier FLOAT DEFAULT 1.5,
-    restart_on_codes TEXT,
-    created_at TIMESTAMP
+    name TEXT UNIQUE,
+    max_retries INTEGER,
+    delay REAL,
+    backoff_multiplier REAL
 );
 
--- Process logs table
+-- Process Logs
 CREATE TABLE process_logs (
     id INTEGER PRIMARY KEY,
-    process_id INTEGER REFERENCES processes(id),
-    log_type TEXT,
-    message TEXT,
-    timestamp TIMESTAMP
-);
-
--- Metrics table
-CREATE TABLE metrics (
-    id INTEGER PRIMARY KEY,
-    process_id INTEGER REFERENCES processes(id),
-    cpu_percent FLOAT,
-    memory_mb FLOAT,
-    timestamp TIMESTAMP
+    process_id INTEGER,
+    timestamp TIMESTAMP,
+    level TEXT,
+    message TEXT
 );
 ```
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Week 1-2)
-- Project structure setup
-- Basic process start/stop functionality
-- Database models and migrations
-- Process monitoring with psutil
-- Logging infrastructure
+### Phase 1: Configuration Management (Week 1)
+- [ ] YAML configuration parser
+- [ ] Configuration schema validation (Pydantic)
+- [ ] Process templates support
+- [ ] `sentinel config` command group
+- [ ] Environment-specific configs
 
-### Phase 2: Scheduling (Week 3)
-- APScheduler integration
-- Cron expression parsing
-- Schedule persistence
-- Schedule management CLI commands
+### Phase 2: REST API Development (Week 2)
+- [ ] FastAPI project setup
+- [ ] Process management endpoints
+- [ ] Schedule management endpoints
+- [ ] Metrics endpoints
+- [ ] WebSocket for real-time logs
+- [ ] OpenAPI documentation
 
-### Phase 3: Auto-Restart (Week 4)
-- Retry policy implementation
-- Exponential backoff algorithm
-- Health check system
-- Resource threshold monitoring
+### Phase 3: Integration Testing (Week 3)
+- [ ] End-to-end workflow tests
+- [ ] Process lifecycle tests
+- [ ] Schedule execution tests
+- [ ] API integration tests
+- [ ] Performance benchmarks
 
-### Phase 4: CLI & API (Week 5)
-- Complete CLI command set
-- Configuration management
-- Log streaming
-- Optional REST API scaffolding
+### Phase 4: Advanced Features (Week 4)
+- [ ] Custom health checks
+- [ ] HTTP/TCP health monitoring
+- [ ] Process dependencies
+- [ ] Group operations
+- [ ] Resource quotas
 
-### Phase 5: Testing & Polish (Week 6)
-- Unit and integration tests
-- Performance optimization
-- Documentation
-- Installation scripts
-- macOS-specific optimizations
+### Phase 5: macOS Integration (Week 5)
+- [ ] launchd plist generation
+- [ ] Service installation scripts
+- [ ] Auto-start configuration
+- [ ] System permissions handling
+
+### Phase 6: Polish & Documentation (Week 6)
+- [ ] API documentation
+- [ ] User guide
+- [ ] Performance optimization
+- [ ] Security hardening
+- [ ] Release preparation
 
 ## Risk Analysis
 
 ### Technical Risks
-1. **Process Zombies**: Implement proper signal handling and process group management
-2. **Resource Leaks**: Use context managers and cleanup handlers
-3. **Database Corruption**: Implement WAL mode and backup strategies
-4. **Permission Issues**: Clear documentation on required permissions
+1. **macOS Permissions**: Process management requires elevated permissions
+   - Mitigation: Clear documentation, permission checks
+   
+2. **Resource Leaks**: Long-running processes may leak memory
+   - Mitigation: Regular profiling, resource limits
 
-### Mitigation Strategies
-- Comprehensive error handling
-- Graceful degradation
-- Regular state snapshots
-- Extensive logging
-- Automated testing pipeline
+3. **Database Corruption**: SQLite concurrent access issues
+   - Mitigation: WAL mode, transaction management
+
+### Project Risks
+1. **Scope Creep**: Feature requests beyond MVP
+   - Mitigation: Strict phase boundaries, backlog management
+
+2. **Performance Degradation**: Scaling issues with many processes
+   - Mitigation: Load testing, optimization passes
 
 ## Success Metrics
+- 90%+ test coverage
+- <100ms CLI response time
+- Support for 50+ concurrent processes
+- Zero critical bugs in production
+- Complete API documentation
+- 5-minute installation process
 
-- Successfully manage 20+ concurrent processes
-- <100ms command response time
-- <1% CPU usage when idle
-- Zero data loss on crashes
-- 99.9% service availability
+## Immediate Next Steps (Cycle 2)
+1. **Configuration Management** (Priority 1)
+   - Implement YAML parser
+   - Create Pydantic schemas
+   - Add config commands
 
-## Future Enhancements
+2. **REST API** (Priority 1)
+   - Setup FastAPI
+   - Create core endpoints
+   - Add authentication
 
-- Web dashboard with real-time metrics
-- Process dependency management
+3. **Integration Tests** (Priority 2)
+   - End-to-end scenarios
+   - Performance tests
+   - Stress testing
+
+## Future Enhancements (Backlog)
+- Web dashboard (React/Vue.js)
 - Distributed process management
-- Integration with launchd
 - Webhook notifications
-- Process templates and profiles
-- Resource allocation limits
 - Container support
+- Prometheus metrics export
 
-## Development Guidelines
+## Supabase Integration Potential
+While the current implementation uses SQLite, Supabase could enhance:
+- **Authentication**: Secure API access
+- **Real-time**: Live process status updates
+- **Storage**: Log file management
+- **Edge Functions**: Custom health checks
+- **Row-Level Security**: Multi-tenant support
 
-### Code Standards
-- Type hints for all functions
-- Docstrings for public APIs
-- 90% test coverage
-- Black/isort formatting
-- Pre-commit hooks
+Decision: Continue with SQLite for MVP, evaluate Supabase for v2.0 with multi-user/distributed features.
 
-### Security Considerations
-- Input validation for all commands
-- Least privilege principle
-- Secure credential storage
-- Audit logging
-- Rate limiting for API
+## Dependencies
+```txt
+# Core
+python>=3.11
+psutil>=5.9.0
+apscheduler>=3.10.0
+sqlalchemy>=2.0.0
+click>=8.1.0
+rich>=13.0.0
+structlog>=23.0.0
 
-## Deliverables
+# API (Phase 2)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+websockets>=11.0.0
 
-1. Core service executable
-2. CLI tool
-3. Configuration examples
-4. User documentation
-5. API documentation
-6. Installation guide
-7. Test suite
-8. Performance benchmarks
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+```
+
+## Conclusion
+SentinelZero has a solid foundation from Cycle 1. Cycle 2 will focus on configuration management and REST API to make the service production-ready. The modular architecture supports incremental feature addition while maintaining stability.
