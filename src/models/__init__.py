@@ -2,6 +2,7 @@
 
 from .base import Base, get_session
 from .models import Process, Schedule, RestartPolicyModel, ProcessLog, Metric
+from .user import User
 
 __all__ = [
     'Base',
@@ -10,5 +11,6 @@ __all__ = [
     'Schedule',
     'RestartPolicyModel',
     'ProcessLog',
-    'Metric'
+    'Metric',
+    'User'
 ]
