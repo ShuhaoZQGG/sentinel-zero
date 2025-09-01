@@ -1,159 +1,334 @@
-# SentinelZero - Cycle 4 Development Plan
+# Sentinel Zero - Cycle 5 Development Plan
 
 ## Executive Summary
-SentinelZero is a production-ready macOS service for process management with enterprise features. Cycle 4 focuses on bug fixes, stability improvements, and production-readiness enhancements.
+Sentinel Zero is a production-ready macOS service for process management with monitoring, scheduling, and auto-restart capabilities. Cycle 5 focuses on fixing critical GitHub issues #10 and #11, and enhancing production readiness with CI/CD and complete UI functionality.
 
-## Current State Analysis
+## Open Issues Analysis
 
-### Completed Features (Cycles 1-3)
-- ✅ Core process management (start/stop/monitor)
+### Issue #10: CLI Argument Parsing Bug (CRITICAL)
+- **Problem**: Long strings in `-c` and `--args` options fail with "unexpected extra argument" error
+- **Root Cause**: Improper shell-style argument parsing in Click CLI
+- **Solution**: Implement proper shlex parsing for command strings
+- **Impact**: Blocks basic functionality for complex commands
+
+### Issue #11: Custom Restart Delay (ENHANCEMENT)
+- **Request**: Add option to specify custom delay periods (e.g., 5h) for restart policies
+- **Solution**: Extend restart policy with flexible time format parsing
+- **Benefit**: Improved flexibility for production use cases
+
+## Current State (Post Cycle 4)
+
+### Completed Features
+- ✅ Core process management with 98% test coverage
 - ✅ Scheduling system (cron/interval)
 - ✅ Auto-restart & retry policies
-- ✅ CLI interface with 98% test coverage
 - ✅ REST API with FastAPI
-- ✅ JWT authentication
+- ✅ JWT authentication (database-backed)
 - ✅ WebSocket real-time updates
-- ✅ React dashboard with Material-UI
+- ✅ React dashboard scaffolding
+- ✅ Docker containerization
+- ✅ Prometheus metrics integration
 - ✅ macOS launchd integration
 
-### Outstanding Issues
-1. **Bug #10**: CLI argument parsing issues
-2. **Bug #11**: Additional CLI parsing problems
-3. **Dependency Management**: FastAPI not in requirements.txt
-4. **Authentication**: In-memory store needs database backing
+### Technical Debt
+- CLI argument parsing issues blocking complex commands
+- Incomplete UI pages (process details, schedules, settings)
+- Missing CI/CD pipeline
+- Limited integration test coverage
 
-## Cycle 4 Requirements
+## Cycle 5 Requirements
 
-### Priority 1: Bug Fixes
-- Fix CLI argument parsing bugs (#10, #11)
-- Ensure proper validation and error messages
-- Add comprehensive unit tests for CLI parsing
+### Priority 1: Critical Bug Fixes (Days 1-2)
+1. **Fix Issue #10 - CLI Argument Parsing**
+   - Implement shlex-based command parsing
+   - Support quoted strings in `-c` and `--args`
+   - Handle special characters and spaces
+   - Add comprehensive test cases
 
-### Priority 2: Production Stability
-- Database-backed authentication (PostgreSQL/SQLite)
-- Proper dependency management
-- Integration test suite for API endpoints
-- Error recovery mechanisms
+2. **Fix Issue #11 - Custom Restart Delays**
+   - Add time format parser (5h, 30m, 120s)
+   - Update restart policy model
+   - Extend CLI with delay option
+   - Document new functionality
 
-### Priority 3: Monitoring & Observability
-- Prometheus metrics integration
-- Structured logging with log levels
-- Health check endpoints
-- Performance monitoring
+### Priority 2: CI/CD Pipeline (Days 3-4)
+1. **GitHub Actions Workflow**
+   - Automated testing on PR
+   - Python 3.9+ matrix testing
+   - Code coverage reporting
+   - Security scanning (SAST)
 
-### Priority 4: Deployment & Operations
-- Docker containerization
-- CI/CD pipeline (GitHub Actions)
-- Configuration management
-- Backup and recovery procedures
+2. **Release Automation**
+   - Semantic versioning
+   - Docker image building
+   - GitHub releases
+   - PyPI publishing preparation
+
+### Priority 3: UI Completion (Days 5-7)
+1. **Process Details Page**
+   - Real-time log viewer
+   - Resource usage charts
+   - Control buttons (start/stop/restart)
+   - Environment variable editor
+
+2. **Schedules Management**
+   - CRUD operations
+   - Cron expression builder
+   - Visual calendar view
+   - Enable/disable toggles
+
+3. **Settings Configuration**
+   - User management
+   - System preferences
+   - API key management
+   - Theme selection
+
+### Priority 4: Integration Testing (Days 8-9)
+1. **API Test Suite**
+   - All endpoint coverage
+   - Authentication flows
+   - Error scenarios
+   - Performance benchmarks
+
+2. **E2E Testing**
+   - Critical user journeys
+   - WebSocket stability
+   - Database migrations
+   - Recovery scenarios
 
 ## Technical Architecture
 
 ### System Components
 ```
 ┌─────────────────────────────────────────────┐
-│                Web Dashboard                 │
-│         (React + TypeScript + Redux)         │
+│            Web Dashboard (React)             │
+│     Material-UI + Redux + TypeScript         │
 └─────────────────┬───────────────────────────┘
                   │ WebSocket/REST
 ┌─────────────────▼───────────────────────────┐
-│              REST API Layer                  │
-│         (FastAPI + JWT + WebSocket)         │
+│              FastAPI Server                  │
+│      JWT Auth + WebSocket + Metrics         │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
-│           Core Business Logic                │
-│   (Process Manager + Scheduler + Monitor)    │
+│           Core Services                      │
+│   Process Manager + Scheduler + Monitor      │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
-│            Data Persistence                  │
-│        (SQLite/PostgreSQL + Redis)          │
+│         Data Layer (SQLAlchemy)             │
+│          SQLite + Migrations                │
+└──────────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│         Observability Stack                  │
+│       Prometheus + Grafana + Logs           │
 └──────────────────────────────────────────────┘
 ```
 
 ### Technology Stack
-- **Backend**: Python 3.9+, FastAPI, SQLAlchemy, APScheduler
+- **Backend**: Python 3.9+, FastAPI, SQLAlchemy, APScheduler, psutil
 - **Frontend**: React 18, TypeScript, Redux Toolkit, Material-UI
-- **Database**: SQLite (default), PostgreSQL (production)
-- **Cache**: Redis (optional, for sessions)
+- **Database**: SQLite (default), PostgreSQL-ready
 - **Monitoring**: Prometheus + Grafana
-- **Deployment**: Docker, GitHub Actions
+- **Testing**: pytest, Jest, Playwright
+- **CI/CD**: GitHub Actions, Docker
+- **Documentation**: OpenAPI, Sphinx
 
-## Implementation Phases
+## Implementation Plan
 
-### Phase 1: Bug Fixes & Stability (Week 1)
-- [ ] Fix CLI argument parsing bugs
-- [ ] Update requirements.txt with all dependencies
-- [ ] Add integration tests for CLI commands
-- [ ] Improve error handling and messages
+### Week 1: Bug Fixes & CI/CD
+```
+Day 1-2: Critical Bug Fixes
+- Fix CLI argument parsing (Issue #10)
+- Add custom restart delays (Issue #11)
+- Write comprehensive tests
+- Update documentation
 
-### Phase 2: Database Integration (Week 1-2)
-- [ ] Implement SQLAlchemy models for auth
-- [ ] Migrate from in-memory to database storage
-- [ ] Add database migration system (Alembic)
-- [ ] Implement session management
+Day 3-4: CI/CD Pipeline
+- Create GitHub Actions workflow
+- Set up test matrix
+- Configure Docker builds
+- Add security scanning
+```
 
-### Phase 3: Monitoring & Metrics (Week 2)
-- [ ] Integrate Prometheus client
-- [ ] Export process metrics
-- [ ] Add custom business metrics
-- [ ] Create Grafana dashboards
+### Week 2: UI & Testing
+```
+Day 5-7: Complete UI Pages
+- Process details with logs
+- Schedule management interface
+- Settings configuration
+- Mobile responsive design
 
-### Phase 4: Deployment Pipeline (Week 3)
-- [ ] Create Dockerfile and docker-compose
-- [ ] Set up GitHub Actions workflow
-- [ ] Add automated testing in CI
-- [ ] Configure release process
+Day 8-9: Integration Testing
+- API endpoint tests
+- WebSocket stability tests
+- E2E user journeys
+- Performance benchmarks
+```
 
-### Phase 5: Documentation & Polish (Week 3)
-- [ ] Update API documentation
-- [ ] Create deployment guide
-- [ ] Add troubleshooting guide
-- [ ] Performance tuning
+### Week 3: Production Ready
+```
+Day 10: Final Polish
+- Grafana dashboards
+- Alert configurations
+- Documentation review
+- Release preparation
+```
 
-## Risk Assessment
+## Database Schema Updates
+
+```sql
+-- Updated restart_policies table for Issue #11
+CREATE TABLE restart_policies (
+    id INTEGER PRIMARY KEY,
+    process_id INTEGER REFERENCES processes(id),
+    max_retries INTEGER DEFAULT 3,
+    delay_seconds INTEGER,  -- Computed from delay_format
+    delay_format VARCHAR(20),  -- Human-readable: "5h", "30m", "120s"
+    backoff_multiplier FLOAT DEFAULT 1.5,
+    on_failure_only BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add indexes for performance
+CREATE INDEX idx_processes_status ON processes(status);
+CREATE INDEX idx_schedules_next_run ON schedules(next_run);
+CREATE INDEX idx_logs_timestamp ON process_logs(timestamp);
+```
+
+## API Enhancements
+
+### New Endpoints
+```
+# Metrics & Monitoring
+GET /api/metrics/prometheus    - Prometheus format metrics
+GET /api/health/live           - Liveness probe
+GET /api/health/ready          - Readiness probe
+
+# Bulk Operations
+POST /api/processes/bulk/start - Start multiple processes
+POST /api/processes/bulk/stop  - Stop multiple processes
+
+# Export/Import
+GET  /api/config/export        - Export configuration
+POST /api/config/import        - Import configuration
+```
+
+## Testing Strategy
+
+### Unit Tests (Existing + New)
+- CLI argument parser (NEW)
+- Time format parser (NEW)
+- Restart delay logic (NEW)
+- Process manager
+- Scheduler operations
+
+### Integration Tests (NEW)
+```python
+# Example test structure
+tests/
+├── integration/
+│   ├── test_api_auth.py
+│   ├── test_api_processes.py
+│   ├── test_api_schedules.py
+│   ├── test_websocket.py
+│   └── test_database.py
+├── e2e/
+│   ├── test_process_lifecycle.py
+│   ├── test_schedule_execution.py
+│   └── test_restart_policies.py
+└── performance/
+    ├── test_concurrent_processes.py
+    └── test_api_throughput.py
+```
+
+## Risk Mitigation
 
 ### Technical Risks
-1. **Database Migration**: Data loss during migration
-   - Mitigation: Comprehensive backup strategy
-2. **Performance Impact**: Metrics collection overhead
-   - Mitigation: Configurable sampling rates
-3. **Compatibility**: macOS version differences
-   - Mitigation: Test on multiple versions
+1. **CLI Breaking Changes**
+   - Risk: Existing scripts may break
+   - Mitigation: Backward compatibility layer
+
+2. **Database Migration Failures**
+   - Risk: Data corruption during schema updates
+   - Mitigation: Automated backup before migrations
+
+3. **UI Performance**
+   - Risk: Slow rendering with many processes
+   - Mitigation: Virtual scrolling, pagination
 
 ### Operational Risks
-1. **Deployment Complexity**: Docker/K8s learning curve
-   - Mitigation: Detailed documentation
-2. **Monitoring Overhead**: Resource consumption
-   - Mitigation: Lightweight metrics collection
+1. **Resource Exhaustion**
+   - Risk: Too many concurrent processes
+   - Mitigation: Configurable limits, resource quotas
 
-## Success Criteria
-- Zero critical bugs in production
-- 99.9% uptime for core services
-- Response time <100ms for API calls
-- Complete documentation coverage
-- Automated deployment pipeline
-- Real-time monitoring dashboard
+2. **Security Vulnerabilities**
+   - Risk: Command injection, privilege escalation
+   - Mitigation: Input validation, sandboxing
+
+## Success Metrics
+
+### Functional Metrics
+- ✅ Issues #10 and #11 resolved
+- ✅ 100% UI pages functional
+- ✅ CI/CD pipeline operational
+- ✅ >80% test coverage
+
+### Performance Metrics
+- CLI response: <100ms
+- API p99 latency: <200ms
+- Process start: <500ms
+- Memory usage: <100MB base
+- Docker image: <150MB
+
+### Quality Metrics
+- Zero critical bugs
+- Zero security vulnerabilities
+- 100% documentation coverage
+- <5% test flakiness
 
 ## Deliverables
-1. Bug-free CLI with comprehensive tests
-2. Database-backed authentication system
-3. Prometheus metrics integration
-4. Docker deployment configuration
-5. CI/CD pipeline with GitHub Actions
-6. Updated documentation suite
 
-## Timeline
-- **Week 1**: Bug fixes and database integration
-- **Week 2**: Monitoring and metrics
-- **Week 3**: Deployment and documentation
-- **Testing & QA**: Continuous throughout
+1. **Bug Fixes**
+   - Resolved Issue #10 (CLI parsing)
+   - Resolved Issue #11 (custom delays)
+   - Regression test suite
 
-## Next Cycle Recommendations
-1. Kubernetes deployment manifests
-2. Multi-tenant support
-3. API rate limiting
-4. Advanced scheduling features
-5. Mobile application
-6. Cloud provider integrations
+2. **CI/CD Pipeline**
+   - GitHub Actions workflow
+   - Automated testing
+   - Docker image builds
+   - Release automation
+
+3. **Complete UI**
+   - All pages functional
+   - Mobile responsive
+   - Real-time updates
+   - Intuitive UX
+
+4. **Documentation**
+   - API reference
+   - Deployment guide
+   - User manual
+   - Developer guide
+
+## Future Roadmap (Cycle 6+)
+
+### Near Term
+- Kubernetes deployment
+- Multi-tenant support
+- Plugin architecture
+- Advanced scheduling
+
+### Long Term
+- ML-based failure prediction
+- Cloud provider integrations
+- Mobile applications
+- Enterprise SSO/LDAP
+- SaaS offering
+
+## Conclusion
+
+Cycle 5 transforms Sentinel Zero from a functional prototype to a production-ready system. By fixing critical bugs, completing the UI, and establishing CI/CD, we create a solid foundation for enterprise adoption and future enhancements.
