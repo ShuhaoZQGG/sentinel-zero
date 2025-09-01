@@ -46,6 +46,11 @@ scheduler.set_process_manager(process_manager)
 init_db()
 
 
+def get_db_session():
+    """Get a database session."""
+    return get_session()
+
+
 @click.group()
 @click.option('--log-level', default='info', type=click.Choice(['debug', 'info', 'warn', 'error']))
 @click.option('--no-color', is_flag=True, help='Disable colored output')
@@ -75,6 +80,13 @@ def start(name, cmd, args, working_dir, env, group, restart_policy, schedule, de
             if '=' in e:
                 key, value = e.split('=', 1)
                 env_vars[key] = value
+        
+        # Parse command if args not provided
+        import shlex
+        if not args and ' ' in cmd:
+            parts = shlex.split(cmd)
+            cmd = parts[0]
+            args = parts[1:]
         
         # Start the process
         info = process_manager.start_process(

@@ -4,8 +4,7 @@ import os
 from contextlib import contextmanager
 from pathlib import Path
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 # Create base class for models
 Base = declarative_base()
