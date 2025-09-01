@@ -1,5 +1,5 @@
 """REST API module for SentinelZero."""
 
-from .main import app
+from .app import app
 
 __all__ = ['app']

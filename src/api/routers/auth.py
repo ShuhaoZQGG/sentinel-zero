@@ -1,8 +1,12 @@
 """Authentication router for API"""
 
 from fastapi import APIRouter, HTTPException, status
-from src.api.models.schemas import TokenRequest, TokenResponse, UserCreate
-from src.api.middleware.auth import (
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from api.models.schemas import TokenRequest, TokenResponse, UserCreate
+from api.middleware.auth import (
     authenticate_user,
     create_access_token,
     create_refresh_token,
