@@ -1,488 +1,430 @@
-# SentinelZero - UI/UX Design Specifications
+# SentinelZero UI/UX Design Specifications
 
-## Design Philosophy
+## Design System
 
-### Principles
-- **Clarity**: Every command and output should be self-explanatory
-- **Efficiency**: Minimize keystrokes for common operations
-- **Consistency**: Uniform patterns across all commands
-- **Feedback**: Always provide clear status and error messages
-- **Accessibility**: Support screen readers and keyboard navigation
+### Brand Identity
+- **Primary Color**: #0066FF (Blue)
+- **Secondary Color**: #00D4AA (Teal)
+- **Success**: #10B981
+- **Warning**: #F59E0B
+- **Error**: #EF4444
+- **Background**: #F9FAFB (Light), #111827 (Dark)
+- **Typography**: Inter (UI), SF Mono (Code)
 
-## Command-Line Interface Design
+### Design Principles
+1. **Clarity**: Real-time process status at a glance
+2. **Efficiency**: Quick access to critical actions
+3. **Reliability**: Visual feedback for all operations
+4. **Scalability**: Handle 100+ processes seamlessly
 
-### Command Structure
+## User Journeys
+
+### 1. First-Time Setup
 ```
-sentinel [global-options] <command> [command-options] [arguments]
+Landing → Auth (Supabase) → Workspace Creation → Dashboard → Quick Start Guide
 ```
+- OAuth integration (GitHub, Google)
+- Guided onboarding with sample process
+- Interactive tutorial highlights
 
-### Global Options
-- `--config PATH`: Specify config file location
-- `--log-level LEVEL`: Set logging verbosity (debug|info|warn|error)
-- `--format FORMAT`: Output format (table|json|yaml)
-- `--no-color`: Disable colored output
-- `--help`: Show help message
-- `--version`: Show version information
-
-## Core Commands
-
-### Process Management
-
-#### `sentinel start`
-```bash
-# Start a new process
-sentinel start --name <name> --cmd <command> [options]
-
-Options:
-  --name, -n          Process name (required)
-  --cmd, -c           Command to execute (required)
-  --args              Command arguments
-  --dir, -d           Working directory
-  --env, -e           Environment variables (KEY=VALUE)
-  --group, -g         Process group name
-  --restart-policy    Restart policy name
-  --schedule          Schedule expression
-  --detach            Run in background
-
-Example:
-  sentinel start -n web-server -c "python app.py" -d /app --env PORT=8080
+### 2. Process Management Flow
 ```
-
-#### `sentinel stop`
-```bash
-# Stop a running process
-sentinel stop <name> [options]
-
-Options:
-  --force, -f         Force kill (SIGKILL)
-  --timeout, -t       Grace period in seconds (default: 10)
-  --all              Stop all processes
-
-Example:
-  sentinel stop web-server --timeout 30
+Dashboard → Add Process → Configure → Monitor → Logs → Adjust Settings
 ```
+- One-click process creation
+- Template library for common tasks
+- Live validation of commands
 
-#### `sentinel restart`
-```bash
-# Restart a process
-sentinel restart <name> [options]
+### 3. Schedule Creation
+```
+Processes → Schedule Tab → Add Schedule → Configure Cron → Preview → Save
+```
+- Visual cron builder with preview
+- Calendar view of upcoming executions
+- Conflict detection
 
-Options:
-  --force, -f         Force restart
-  --delay, -d         Delay between stop and start
+### 4. Incident Response
+```
+Alert Notification → Dashboard → Failed Process → Logs → Restart/Debug
+```
+- Push notifications for failures
+- One-click log access
+- Suggested fixes based on error patterns
 
-Example:
-  sentinel restart web-server --delay 5
+## Component Architecture
+
+### Layout Components
+
+#### AppShell
+```
+┌─────────────────────────────────────────────┐
+│ TopBar (Logo | Search | User | Notifications)│
+├───────────┬─────────────────────────────────┤
+│ Sidebar   │                                 │
+│           │     Main Content Area           │
+│ Nav Menu  │                                 │
+│           │                                 │
+│ Quick     │                                 │
+│ Actions   │                                 │
+└───────────┴─────────────────────────────────┘
 ```
 
-#### `sentinel status`
-```bash
-# Show process status
-sentinel status [name] [options]
+#### Navigation Structure
+- **Dashboard** (Overview)
+- **Processes** (List/Grid view)
+- **Schedules** (Calendar/List)
+- **Logs** (Aggregated view)
+- **Metrics** (Charts/Stats)
+- **Settings** (Config/Users)
+- **API Keys** (Management)
 
-Options:
-  --watch, -w         Auto-refresh every N seconds
-  --metrics, -m       Include resource metrics
-  --history          Show status history
+### Page Specifications
 
-Output (table format):
-┌──────────┬─────────┬─────┬──────┬────────┬────────┐
-│ Name     │ Status  │ PID │ CPU% │ Memory │ Uptime │
-├──────────┼─────────┼─────┼──────┼────────┼────────┤
-│ web-srv  │ running │ 1234│ 2.3  │ 45 MB  │ 2h 15m │
-│ worker-1 │ stopped │ -   │ -    │ -      │ -      │
-│ backup   │ failed  │ -   │ -    │ -      │ -      │
-└──────────┴─────────┴─────┴──────┴────────┴────────┘
+#### 1. Dashboard
+**Components:**
+- SystemHealthCard (CPU, Memory, Active Processes)
+- ProcessStatusGrid (Running/Stopped/Failed counts)
+- RecentActivityFeed (Last 10 events)
+- UpcomingSchedules (Next 5 executions)
+- QuickActions (Start all, Stop all, Clear logs)
+
+**Real-time Updates:**
+- WebSocket connection indicator
+- Live process status changes
+- Resource usage graphs (60s refresh)
+
+#### 2. Process Management
+**List View:**
+- DataTable with sortable columns
+- Inline status indicators
+- Bulk actions toolbar
+- Search/filter sidebar
+
+**Detail View:**
+- ProcessHeader (Name, Status, PID)
+- ResourceMonitor (Live CPU/Memory charts)
+- LogViewer (Streaming stdout/stderr)
+- ConfigurationPanel (Env vars, working dir)
+- RestartPolicyEditor
+- SchedulesList (Associated schedules)
+
+**Add/Edit Modal:**
+- Multi-step wizard
+- Command builder with syntax highlighting
+- Environment variable editor
+- Restart policy configurator
+- Test run capability
+
+#### 3. Scheduling Interface
+**Calendar View:**
+- Monthly/Weekly/Daily views
+- Drag-and-drop rescheduling
+- Color coding by process
+- Execution history overlay
+
+**Schedule Builder:**
+- Visual cron expression builder
+- Natural language input ("Every Monday at 9am")
+- Timezone selector
+- Conflict checker
+- Preview next 10 runs
+
+#### 4. Logs Viewer
+**Features:**
+- Unified log stream
+- Process filtering
+- Severity levels (Info/Warning/Error)
+- Full-text search
+- Export functionality
+- Tail mode (real-time following)
+
+**Log Entry Format:**
+```
+[2024-01-15 10:23:45] [Process: backup-script] [INFO]
+Starting backup operation...
 ```
 
-#### `sentinel list`
-```bash
-# List all processes
-sentinel list [options]
+#### 5. Metrics Dashboard
+**Charts:**
+- Process uptime (Bar chart)
+- Resource usage trends (Line chart)
+- Failure rate (Pie chart)
+- Schedule execution history (Timeline)
 
-Options:
-  --filter, -f        Filter by status/group
-  --sort, -s          Sort by field
-  --limit, -l         Limit results
-
-Output includes:
-- Process name
-- Status (running/stopped/failed/scheduled)
-- Command
-- Last started
-- Restart count
-```
-
-### Scheduling Commands
-
-#### `sentinel schedule`
-```bash
-# Manage schedules
-sentinel schedule <subcommand> [options]
-
-Subcommands:
-  add <name>          Add schedule to process
-  remove <name>       Remove schedule
-  list                List all schedules
-  enable <name>       Enable schedule
-  disable <name>      Disable schedule
-
-Options for 'add':
-  --cron              Cron expression
-  --interval          Interval (e.g., 5m, 1h, 1d)
-  --once              One-time execution at timestamp
-
-Examples:
-  sentinel schedule add web-backup --cron "0 2 * * *"
-  sentinel schedule add health-check --interval 5m
-  sentinel schedule list
-```
-
-### Restart Policy Commands
-
-#### `sentinel policy`
-```bash
-# Manage restart policies
-sentinel policy <subcommand> [options]
-
-Subcommands:
-  create <name>       Create new policy
-  update <name>       Update existing policy
-  delete <name>       Delete policy
-  list                List all policies
-  apply <name>        Apply policy to process
-
-Options for 'create':
-  --max-retries       Maximum retry attempts
-  --delay             Initial delay between retries
-  --backoff           Backoff multiplier
-  --on-exit-codes     Restart on specific exit codes
-  --health-check      Health check command
-
-Example:
-  sentinel policy create aggressive --max-retries 10 --delay 1s --backoff 2.0
-  sentinel policy apply aggressive web-server
-```
-
-### Monitoring Commands
-
-#### `sentinel logs`
-```bash
-# View process logs
-sentinel logs <name> [options]
-
-Options:
-  --follow, -f        Follow log output
-  --tail, -t          Number of lines to show
-  --since             Show logs since timestamp
-  --level             Filter by log level
-  --grep              Filter by pattern
-
-Example:
-  sentinel logs web-server -f --tail 100 --grep ERROR
-```
-
-#### `sentinel metrics`
-```bash
-# View process metrics
-sentinel metrics <name> [options]
-
-Options:
-  --period, -p        Time period (1h, 1d, 1w)
-  --interval          Data point interval
-  --export            Export format (csv|json)
-
-Output:
-- CPU usage graph
-- Memory usage graph
-- Restart frequency
+**Stats Cards:**
+- Total processes
 - Average uptime
-```
+- Success rate
+- Active schedules
 
-### Configuration Commands
+#### 6. Settings
+**Sections:**
+- General (Theme, Timezone, Notifications)
+- Security (2FA, Sessions, API keys)
+- Team (User management, Roles)
+- Integrations (Webhooks, Slack)
+- Billing (Supabase integration)
 
-#### `sentinel config`
-```bash
-# Manage configuration
-sentinel config <subcommand> [options]
+## Responsive Design
 
-Subcommands:
-  show                Show current configuration
-  set <key> <value>   Set configuration value
-  get <key>           Get configuration value
-  export              Export configuration
-  import <file>       Import configuration
+### Breakpoints
+- Mobile: 320px - 768px
+- Tablet: 768px - 1024px
+- Desktop: 1024px - 1920px
+- Wide: 1920px+
 
-Example:
-  sentinel config set log.retention 30d
-  sentinel config export > config.yaml
-```
+### Mobile Adaptations
+- Bottom navigation bar
+- Collapsible process cards
+- Swipe actions for quick controls
+- Simplified dashboard widgets
+- Full-screen modals
 
-## Output Formatting
-
-### Status Indicators
-- 🟢 Running (green)
-- 🟡 Starting/Stopping (yellow)
-- 🔴 Failed/Stopped (red)
-- ⏸️  Paused
-- 🔄 Restarting
-- ⏰ Scheduled
-
-### Progress Indicators
-```
-Starting web-server... [████████--] 80%
-Stopping worker-1... Done ✓
-Restarting backup... Failed ✗
-```
-
-### Error Messages
-```
-Error: Process 'web-server' not found
-Hint: Use 'sentinel list' to see available processes
-
-Error: Invalid cron expression '0 0 * *'
-Expected format: MIN HOUR DAY MONTH WEEKDAY
-Example: '0 2 * * *' (daily at 2 AM)
-```
-
-## Interactive Features
-
-### Auto-completion
-- Command completion
-- Process name completion
-- Option value suggestions
-- File path completion
-
-### Interactive Mode
-```bash
-sentinel interactive
-
-SentinelZero> start -n test -c "echo hello"
-Process 'test' started (PID: 1234)
-
-SentinelZero> status
-[Shows status table]
-
-SentinelZero> help
-[Shows available commands]
-
-SentinelZero> exit
-```
-
-## Configuration File Format
-
-### YAML Configuration
-```yaml
-# ~/.sentinel/config.yaml
-defaults:
-  log_level: info
-  restart_policy: standard
-  working_dir: ~/projects
-
-processes:
-  - name: web-server
-    command: python app.py
-    directory: /app
-    environment:
-      PORT: 8080
-      ENV: production
-    restart:
-      max_retries: 5
-      delay: 10s
-    schedule:
-      cron: "0 */6 * * *"
-
-  - name: worker
-    command: python worker.py
-    group: background-jobs
-    restart:
-      policy: aggressive
-
-policies:
-  standard:
-    max_retries: 3
-    delay: 5s
-    backoff: 1.5
-
-  aggressive:
-    max_retries: 10
-    delay: 1s
-    backoff: 2.0
-```
-
-## Web Dashboard (Future Enhancement)
-
-### Dashboard Layout
-```
-┌─────────────────────────────────────────────────┐
-│ SentinelZero                    [Settings] [Docs]│
-├─────────────────────────────────────────────────┤
-│ ┌───────────┐ ┌─────────────────────────────┐  │
-│ │Processes  │ │ Process Details              │  │
-│ │           │ │                              │  │
-│ │◉ web-srv  │ │ Name: web-server             │  │
-│ │○ worker-1 │ │ Status: Running              │  │
-│ │● backup   │ │ PID: 1234                    │  │
-│ │           │ │ Uptime: 2h 15m               │  │
-│ │[+ Add New]│ │                              │  │
-│ └───────────┘ │ [Start] [Stop] [Restart]     │  │
-│               │                              │  │
-│               │ ┌──────────────────────────┐ │  │
-│               │ │ Resource Usage           │ │  │
-│               │ │ CPU: ▁▂▄▅▃▂▁ (2.3%)     │ │  │
-│               │ │ RAM: ▃▄▅▆▅▄▃ (45 MB)    │ │  │
-│               │ └──────────────────────────┘ │  │
-│               │                              │  │
-│               │ ┌──────────────────────────┐ │  │
-│               │ │ Recent Logs              │ │  │
-│               │ │ [2024-01-20 10:15] Start │ │  │
-│               │ │ [2024-01-20 10:16] Ready │ │  │
-│               │ └──────────────────────────┘ │  │
-│               └─────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
-
-### Mobile Responsive Design
-- Single column layout on mobile
-- Collapsible sections
+### Tablet Optimizations
+- Split-view for list/detail
 - Touch-optimized controls
-- Swipe gestures for navigation
+- Floating action buttons
+- Gesture support
 
-## Accessibility
+## Component States
 
-### Screen Reader Support
-- Semantic command output
-- Descriptive error messages
-- Status announcements
-- Table headers for data
+### Process Card States
+1. **Running**: Green border, pulsing indicator
+2. **Stopped**: Gray background, start button
+3. **Failed**: Red border, error icon, retry button
+4. **Starting**: Yellow border, spinner
+5. **Scheduled**: Blue border, clock icon
 
-### Keyboard Navigation
-- Tab through options
-- Arrow keys for selection
-- Escape to cancel
-- Enter to confirm
+### Interactive Elements
+- **Buttons**: Hover, Active, Loading, Disabled
+- **Forms**: Focus, Valid, Invalid, Submitting
+- **Tables**: Hover row, Selected, Sorting
+- **Cards**: Default, Hover, Selected, Dragging
 
-## Color Schemes
+## Accessibility Requirements
 
-### Default Theme
-- Success: Green (#10B981)
-- Warning: Yellow (#F59E0B)
-- Error: Red (#EF4444)
-- Info: Blue (#3B82F6)
-- Muted: Gray (#6B7280)
+### WCAG 2.1 AA Compliance
+- Color contrast ratio: 4.5:1 minimum
+- Keyboard navigation for all features
+- Screen reader announcements
+- Focus indicators
+- Alt text for icons
+- ARIA labels and landmarks
 
-### High Contrast Mode
-- Increased color contrast ratios
-- Bold text for emphasis
-- Clear status indicators
+### Keyboard Shortcuts
+- `Cmd+K`: Global search
+- `Cmd+N`: New process
+- `Cmd+S`: Save changes
+- `Cmd+/`: Keyboard shortcuts help
+- `Space`: Start/stop selected process
+- `L`: View logs
+- `R`: Restart process
+
+## Real-time Features
+
+### WebSocket Events
+```javascript
+// Connection status indicator
+ws.onopen: "Connected" (green)
+ws.onclose: "Disconnected" (red)
+ws.reconnecting: "Reconnecting..." (yellow)
+
+// Live updates
+process.status.changed
+process.resource.update
+schedule.executed
+log.new.entry
+alert.triggered
+```
+
+### Optimistic UI Updates
+- Immediate visual feedback
+- Rollback on server error
+- Loading states for async operations
+- Skeleton screens for initial loads
 
 ## Error Handling
 
-### Error Categories
-1. **Configuration Errors**: Missing or invalid config
-2. **Permission Errors**: Insufficient privileges
-3. **Resource Errors**: Port in use, file not found
-4. **Process Errors**: Failed to start, crashed
-5. **Validation Errors**: Invalid input
+### User-Friendly Messages
+- "Process failed to start" → Show reason + suggestion
+- "Schedule conflict" → Highlight conflicting times
+- "Connection lost" → Auto-retry with countdown
+- "Permission denied" → Clear action required
 
-### Error Response Format
-```json
-{
-  "error": {
-    "code": "PROCESS_NOT_FOUND",
-    "message": "Process 'web-server' not found",
-    "details": "No process with name 'web-server' exists",
-    "hint": "Use 'sentinel list' to see available processes",
-    "timestamp": "2024-01-20T10:15:30Z"
-  }
-}
+### Recovery Actions
+- Retry buttons with exponential backoff
+- Fallback to cached data
+- Graceful degradation
+- Clear error boundaries
+
+## Performance Optimizations
+
+### Frontend
+- Code splitting by route
+- Lazy loading for modals
+- Virtual scrolling for large lists
+- Debounced search inputs
+- Memoized expensive computations
+- Service worker for offline support
+
+### Data Management
+- Pagination (25 items default)
+- Infinite scroll option
+- Client-side caching
+- Optimistic updates
+- Background data refresh
+
+## Integration Points
+
+### Supabase Auth UI
+- Pre-built auth components
+- Social login buttons
+- Password reset flow
+- Email verification
+- Session management
+
+### API Integration
+- REST endpoints visualization
+- WebSocket connection status
+- Rate limit indicators
+- Request/response inspector
+
+### Third-party Services
+- Slack notification preview
+- Webhook configuration UI
+- Prometheus metrics export
+- Docker status integration
+
+## Mobile App Considerations
+
+### React Native Components
+- NativeProcessCard
+- NativeLogViewer
+- NativeSchedulePicker
+- Push notification handler
+- Biometric authentication
+
+### Platform-Specific
+- iOS: Haptic feedback, 3D touch
+- Android: Material Design, back button
+- Deep linking support
+- Background sync
+
+## Design Mockups
+
+### Dashboard Wireframe
+```
+┌──────────────────────────────────────────────┐
+│ ■ SentinelZero        🔍 Search    👤 ▼ 🔔 3 │
+├──────────────────────────────────────────────┤
+│ System Health              Quick Stats        │
+│ ┌──────────┐ ┌──────────┐ ╔════════════════╗ │
+│ │ CPU: 45% │ │ Mem: 2.1G│ ║ Running    12  ║ │
+│ │ ▁▃▅▇▅▃▁  │ │ ▁▃▅▇▅▃▁  │ ║ Stopped     5  ║ │
+│ └──────────┘ └──────────┘ ║ Failed      2  ║ │
+│                            ╚════════════════╝ │
+│                                               │
+│ Active Processes                              │
+│ ┌────────────────────────────────────────┐   │
+│ │ 🟢 backup-daily     | CPU: 12% | 2.5h  │   │
+│ │ 🟢 api-server       | CPU: 23% | 5d    │   │
+│ │ 🔴 data-sync        | FAILED   | Retry  │   │
+│ └────────────────────────────────────────┘   │
+│                                               │
+│ Upcoming Schedules                            │
+│ ┌────────────────────────────────────────┐   │
+│ │ 14:00  backup-daily    (in 2 hours)    │   │
+│ │ 18:00  report-gen      (in 6 hours)    │   │
+│ │ 02:00  cleanup         (tomorrow)      │   │
+│ └────────────────────────────────────────┘   │
+└──────────────────────────────────────────────┘
 ```
 
-## Performance Considerations
+### Process Detail View
+```
+┌──────────────────────────────────────────────┐
+│ ← Back    backup-daily          [Stop] [Edit]│
+├──────────────────────────────────────────────┤
+│ Status: 🟢 Running | PID: 12345 | Uptime: 2h │
+├──────────────────────────────────────────────┤
+│ Resources          │ Configuration            │
+│ CPU ▁▃▅▇▅▃▁ 12%   │ Command: backup.sh       │
+│ MEM ▁▁▁▃▁▁▁ 256MB │ Dir: /var/backups        │
+│                    │ Restart: On failure (3x) │
+├────────────────────┴─────────────────────────┤
+│ Logs                              [Clear][↓]  │
+│ ┌────────────────────────────────────────┐   │
+│ │ 2024-01-15 10:23:45 Starting backup... │   │
+│ │ 2024-01-15 10:23:46 Scanning files...  │   │
+│ │ 2024-01-15 10:24:12 Compressed 1.2GB   │   │
+│ │ 2024-01-15 10:25:33 Upload complete    │   │
+│ └────────────────────────────────────────┘   │
+└──────────────────────────────────────────────┘
+```
 
-### CLI Response Times
-- Command execution: <100ms
-- Status query: <50ms
-- Log streaming: Real-time
-- Auto-completion: <20ms
+## Implementation Framework
 
-### Resource Usage
-- Idle memory: <10MB
-- Active monitoring: <50MB
-- CPU usage: <1% idle, <5% active
+### React Component Structure
+```
+src/
+├── components/
+│   ├── common/
+│   │   ├── Button/
+│   │   ├── Card/
+│   │   └── Modal/
+│   ├── process/
+│   │   ├── ProcessCard/
+│   │   ├── ProcessList/
+│   │   └── ProcessDetail/
+│   ├── schedule/
+│   │   ├── ScheduleCalendar/
+│   │   └── CronBuilder/
+│   └── layout/
+│       ├── AppShell/
+│       ├── Sidebar/
+│       └── TopBar/
+├── pages/
+│   ├── Dashboard/
+│   ├── Processes/
+│   ├── Schedules/
+│   └── Settings/
+└── hooks/
+    ├── useWebSocket/
+    ├── useProcess/
+    └── useSupabase/
+```
 
-## User Journey Maps
+### State Management (Redux Toolkit)
+```javascript
+store/
+├── processes/
+│   ├── slice.ts
+│   └── api.ts
+├── schedules/
+├── logs/
+├── metrics/
+└── auth/
+```
 
-### First-Time User
-1. Install SentinelZero
-2. Run `sentinel --help`
-3. Start first process with `sentinel start`
-4. Check status with `sentinel status`
-5. View logs with `sentinel logs`
-6. Configure restart policy
-7. Set up schedule
+## Next Phase Handoff
 
-### Power User
-1. Import configuration file
-2. Start process groups
-3. Monitor metrics
-4. Customize policies
-5. Export configurations
-6. Integrate with CI/CD
+### Development Priorities
+1. Implement Dashboard with real-time updates
+2. Create Process management CRUD
+3. Build WebSocket connection manager
+4. Integrate Supabase Auth UI
+5. Add responsive mobile views
 
-### System Administrator
-1. Deploy system-wide
-2. Configure service
-3. Set up monitoring
-4. Manage permissions
-5. Review audit logs
-6. Optimize performance
+### Design Assets Needed
+- Icon set (Process states, actions)
+- Loading animations
+- Empty state illustrations
+- Error illustrations
+- Onboarding graphics
 
-## Testing Considerations
-
-### Usability Testing
-- Command discoverability
-- Error message clarity
-- Help documentation
-- Performance perception
-- Learning curve
-
-### A/B Testing
-- Command syntax variations
-- Output format preferences
-- Color scheme effectiveness
-- Default settings
-
-## Documentation
-
-### In-CLI Help
-- Command descriptions
-- Option explanations
-- Usage examples
-- Common patterns
-
-### Man Pages
-- Comprehensive documentation
-- Examples section
-- Troubleshooting guide
-- Configuration reference
-
-### Online Documentation
-- Getting started guide
-- API reference
-- Best practices
-- Video tutorials
-
-## Metrics & Analytics
-
-### Usage Metrics
-- Most used commands
-- Common error patterns
-- Performance bottlenecks
-- Feature adoption
-
-### User Feedback
-- Command suggestions
-- Error message improvements
-- Feature requests
-- Bug reports
+### Technical Constraints
+- React 18+ for concurrent features
+- Material-UI v5 for components
+- Recharts for data visualization
+- Socket.io for WebSocket
+- React Query for API state
