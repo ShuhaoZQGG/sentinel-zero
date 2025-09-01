@@ -61,16 +61,25 @@ class TestLaunchdIntegration:
         runner = CliRunner()
         
         # Mock both uvicorn and scheduler to prevent actual service start
-        with patch('src.cli.main.uvicorn') as mock_uvicorn:
-            with patch('src.cli.main.scheduler.start') as mock_scheduler:
+        with patch('uvicorn.run') as mock_uvicorn_run:
+            # Import scheduler directly to patch it properly
+            from src.cli.main import scheduler
+            with patch.object(scheduler, 'start') as mock_scheduler_start:
                 result = runner.invoke(cli, ['daemon'])
                 
+                # Print result output for debugging if test fails
+                if result.exit_code != 0:
+                    print(f"Command output: {result.output}")
+                    print(f"Exit code: {result.exit_code}")
+                    if result.exception:
+                        print(f"Exception: {result.exception}")
+                
                 # Check scheduler was started
-                mock_scheduler.assert_called_once()
+                mock_scheduler_start.assert_called_once()
                 
                 # Check uvicorn was called with correct parameters
-                mock_uvicorn.run.assert_called_once()
-                call_args = mock_uvicorn.run.call_args
+                mock_uvicorn_run.assert_called_once()
+                call_args = mock_uvicorn_run.call_args
                 assert call_args[1]['port'] == 8000
                 assert call_args[1]['host'] == '0.0.0.0'
     

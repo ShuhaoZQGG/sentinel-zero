@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 
 from src.api.models.schemas import WebSocketMessage
-from src.models.database import get_db
+from src.models.base import get_session as get_db
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

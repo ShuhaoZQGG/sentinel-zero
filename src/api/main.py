@@ -9,8 +9,7 @@ from typing import Dict, Any
 
 from src.api.routers import processes, schedules, metrics, auth, websocket
 from src.api.middleware.auth import verify_token
-from src.models.database import init_db
-from src.config.settings import Settings
+from src.models.base import init_db
 
 logger = logging.getLogger(__name__)
 

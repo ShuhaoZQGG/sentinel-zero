@@ -7,10 +7,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
 from src.api.models.schemas import ProcessMetrics, LogEntry
-from src.models.database import get_db
-from src.models.process import Process
-from src.models.metrics import Metric
-from src.models.log import ProcessLog
+from src.models.base import get_session as get_db
+from src.models.models import Process, Metric, ProcessLog
 
 router = APIRouter()
 
