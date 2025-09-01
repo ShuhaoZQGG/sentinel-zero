@@ -18,8 +18,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ShuhaoZQGG/sentinel-zero",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
+    package_dir={},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -36,7 +36,7 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "sentinel=cli.main:cli",
+            "sentinel-zero=src.cli.main:cli",
         ],
     },
     include_package_data=True,
